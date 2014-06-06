@@ -1,0 +1,17 @@
+{
+  "name": "APIAutoDoc",
+  "version": "0.1.0",
+  "description": "Automatically generate documentation for your node API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Ernst",
+  "license": "MIT",
+  "bin": {
+    "apidoc": "bin/index.js"
+  },
+  "devDependencies": {
+    "minimist": "^0.1.0"
+  }
+}
