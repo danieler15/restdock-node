@@ -1,17 +1,29 @@
 {
-  "name": "APIAutoDoc",
-  "version": "0.1.0",
-  "description": "Automatically generate documentation for your node API",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Daniel Ernst",
-  "license": "MIT",
-  "bin": {
-    "apidoc": "bin/index.js"
-  },
-  "devDependencies": {
-    "minimist": "^0.1.0"
-  }
+ 	"name": "apidock",
+ 	"version": "0.1.0",
+ 	"description": "Automatic API documentation generation and hosting.",
+	"keywords": [
+		"API",
+		"documentation",
+		"utility"
+	],
+	"homepage": "****",
+	"bugs": "github***",
+	"respository": {
+		"type": "git",
+		"url": "github***"
+	},
+	"scripts": {
+    	"test": "echo \"Error: no test specified\" && exit 1"
+	},
+  	"author": "Daniel Ernst",
+  	"license": "MIT",
+  	"bin": {
+    	"apidock": "bin/index.js"
+  	},
+ 	"dependencies": {
+   		"minimist": "^0.1.0",
+		"request-json": "0.4.10"
+	},
+  	"preferGlobal": "ture"
 }

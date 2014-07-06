@@ -5,8 +5,8 @@ var fs = require("fs");
 var pathmod = require("path");
 var util = require("util");
 
-
-var apiData = new Array();
+var markup = "//@";
+var apiData = {};
 
 exports.main = function(argv) {
 	
@@ -26,8 +26,12 @@ exports.main = function(argv) {
 		walkDirectory(process.cwd());
 	}
 	
-	//logArray(apiData);	
 	var fullData = insertJSONMetaData(apiData);
+//	console.log("\n\nfullData:");
+//	logArray(fullData);
+//	console.log("\n\n");
+//	console.log(fullData["api_endpoints"]);
+	
 	writeFullJSONAPIData(fullData);
 };
 
@@ -38,17 +42,20 @@ function walkDirectory(dir) {
 	
 	console.log("Encountered directory with paths: " + paths);
 	
-	paths.forEach(function(path) {
-		var fileStats = fs.lstatSync(path);
-		if (fileStats.isDirectory() && path != "node_modules" && path != "bin") {
-			walkDirectory(path)
+	for (var i = 0; i < paths.length; i++) {
+		var shortPath = paths[i];
+		var fullPath = dir + "/" + shortPath;
+		
+		var fileStats = fs.lstatSync(fullPath);
+		if (fileStats.isDirectory() && shortPath != "node_modules" && shortPath != "bin" && shortPath != ".git" && shortPath != "css") {
+			walkDirectory(fullPath)
 		}
 		else if (fileStats.isFile()) {
-			if (isJSFile(path)) {
-				handleJSFile(path);
+			if (isJSFile(shortPath)) {
+				handleJSFile(fullPath);
 			}	
 		}
-	});	
+	}	
 }
 
 function handleJSFile(path) {
@@ -72,6 +79,11 @@ function handleJSFile(path) {
 			
 			var end = (rem.indexOf("'") == -1) ? rem.indexOf('"') : rem.indexOf("'");
 			var apiPath = rem.substr(0, end);
+			
+			if (!isValidPath(apiPath)) {
+				console.log("invalid path: " + apiPath);
+				continue;
+			}
 			console.log(apiPath);
 			
 			var rest = line.substr(end);
@@ -82,43 +94,39 @@ function handleJSFile(path) {
 				// function implementation is somewhere else
 			}
 			
-			// get endpoint data
-			var prev = lines[ln-1];
-			var info = "";
-			var endpointName = "endpoint.Unknown";
-			if (prev.substr(0, 3) === "//@") {
-				// get the meta data
-				if (prev.split('"').length > 2) {
-
-					// we have an endpoint name
-					var openQuote = prev.indexOf('"');
-					var endQuote = prev.indexOf('"', openQuote+1);
-					endpointName = prev.substr(openQuote+1, endQuote-openQuote-1);
-					
-					prev.slice(endQuote);
-				}
+			// this is the object with all the endpoint data
+			var endpoint = {};
+			
+			
+			var curLineNum = ln - 1;
+			var curLine = lines[curLineNum];
+			
+			if (hasMarkup(lines[curLineNum]) && lines[curLineNum].indexOf("//@ignore") > -1) {
+				console.log("ignoring path:  " + apiPath);
+				continue;
+			}
+		
+			while (hasMarkup(curLine)) {
+				endpoint[markupKey(curLine)] = markupValue(curLine);
 				
-				var begin = (prev.indexOf('"', openQuote+1) === -1) ? 4 : prev.indexOf('"', openQuote+1) + 2;
-				info = prev.substr(begin);
-				
-				
+				curLineNum--;
+				curLine = lines[curLineNum]
 			}
 			
-			var data = new Array();
-			data["endpoint_method"] = endpointMethod;
-			data["endpoint_path"] = apiPath;
-			data['endpoint_name'] = endpointName;
-			data['endpoint_info'] = info;
-			data['endpoint_parameters'] = new Array();
+			endpoint["method"] = endpointMethod;
+			endpoint["path"] = apiPath;
+			endpoint['parameters'] = [];
 			
-			apiData[endpointName] = data;
-			currentEndpoint = endpointName;
+			var endpointKey = endpoint["identifier"] ? endpoint["identifier"] : endpoint["path"];
+
+			apiData[endpointKey] = endpoint;
+			currentEndpoint = endpointKey;
 		}
 		
 		/* LOOKING FOR ENDPOINT PARAMETERS */
 		else if (line.indexOf(".query.") != -1 || line.indexOf(".params.") != -1 || line.indexOf(".body.") != -1 || line.indexOf(".param(") != -1) {
 			
-			var param_name;
+			var parameter = {};
 			
 			// which one is it?
 			var possibilities = new Array(".query.", ".params.", ".body.", ".param(");
@@ -133,30 +141,29 @@ function handleJSFile(path) {
 			var remaining = line.substr(start);
 			var indexSemi = (remaining.indexOf(";") == -1) ? 2000 : remaining.indexOf(";");
 			var indexSpace = (remaining.indexOf(" ") == -1) ? 2000 : remaining.indexOf(" ");
-			if (indexSemi < indexSpace) {
-				param_name = remaining.substr(0, indexSemi);
-			}
-			else if (indexSpace < indexSemi){
-				param_name = remaining.substr(0, indexSpace);
+			var indexComma = (remaining.indexOf(",") == -1) ? 2000 : remaining.indexOf(",");
+			var indices = new Array(indexSemi, indexSpace, indexComma);
+			
+			var smallestIndex = smallestInArray(indices);
+			if (indexSemi == indexComma && indexSemi == indexSpace) {
+				parameter["name"] = "ERROR**";
 			}
 			else {
-				param_name = "ERROR**";
+				parameter["name"] = remaining.substr(0, smallestIndex)
 			}
+		
 			
 			// GET THE PARAMETER DESCRIPTION
-			var param_description = "";
-			var prev = lines[ln-1];
-			if (prev.indexOf("//@") != -1) {
-				param_description = prev.substr(prev.indexOf("//@") + 4);
+			var curLineNum = ln - 1;
+			var curLine = lines[curLineNum];
+			while (hasMarkup(curLine)) {
+				parameter[markupKey(curLine)] = markupValue(curLine);
+				
+				curLine = lines[--curLineNum];
 			}
-			
-			var parameterData = {
-				"parameter_name": param_name,
-				"parameter_description": param_description
-			};
 
 			if (currentEndpoint != "") {
-				apiData[currentEndpoint]["endpoint_parameters"].push(parameterData);
+				apiData[currentEndpoint]["parameters"].push(parameter);
 			}
 		}
 		
@@ -165,7 +172,9 @@ function handleJSFile(path) {
 
 function insertJSONMetaData(endpointData) {
 	
-	var metadata = require(pathmod.join(process.cwd(), "apidata.json"));
+	var metadata = require(pathmod.join(process.cwd(), "apidock.json"));
+	
+	logArray(metadata);
 	
 	var fullJSON = {
 		"apidocs_info": {
@@ -180,7 +189,7 @@ function insertJSONMetaData(endpointData) {
 		"api_author": metadata.author,
 		"api_text_description": metadata.description,
 		"api_version": metadata.version,
-		"api_url": metadata.docs_url,
+		"api_base_url": metadata.docs_url,
 		"api_endpoints": endpointData
 	};
 	return fullJSON;
@@ -188,11 +197,10 @@ function insertJSONMetaData(endpointData) {
 
 function writeFullJSONAPIData(json) {
 
-	json = util.inspect(json, {showHidden: false, depth: null});
-	//json = JSON.stringify(json, null, 4);
-	console.log(json);
+	json = JSON.stringify(json, null, 3);
+	console.log("\n\nfull JSON data:  " + json);
 	
-	fs.writeFile("apidocs-api_description.json", json, function(err) {
+	fs.writeFile("api_description.json", json, function(err) {
 		if (err) {
 			console.log(err);
 		}
@@ -200,6 +208,55 @@ function writeFullJSONAPIData(json) {
 			console.log("File saved successfully.");
 		}
 	});
+}
+
+function hasMarkup(str) {
+	
+	var has = (str.indexOf(markup) > -1);
+	return has;
+}
+
+function markupKey(str) {
+	var startOfMarkup = str.indexOf(markup);
+	var afterMarkupIndex = startOfMarkup + markup.length;
+	var line = str.substr(afterMarkupIndex);
+	
+	var indexOfFirstSpace = line.indexOf(" ");
+	var key = line.substring(0, indexOfFirstSpace);
+	var value = line.substr(indexOfFirstSpace+1);
+	
+	console.log("markupKey for string [" + str + "]  == " +key);
+	
+	return key;
+}
+
+function markupValue(str) {
+	var startOfMarkup = str.indexOf(markup);
+	var afterMarkupIndex = startOfMarkup + markup.length;
+	var line = str.substr(afterMarkupIndex);
+	
+	var indexOfFirstSpace = line.indexOf(" ");
+	var key = line.substring(0, indexOfFirstSpace);
+	var value = line.substr(indexOfFirstSpace+1);
+	
+	console.log("markupValue for string [" + str + "]  == " +value);
+	
+	return value;	
+}
+
+function smallestInArray(arr) {
+	var smallest = arr[0];
+	for (var i = 1; i < arr.length; i++) {
+		if (arr[i] < smallest) {
+			smallest = arr[i];
+		}
+	}
+	return smallest;
+}
+
+function isValidPath(str) {
+	//TODO: improve
+	return str.indexOf("/") > -1;
 }
 
 function logArray(arr) {

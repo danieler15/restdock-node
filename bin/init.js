@@ -6,7 +6,7 @@ exports.main = function(argv) {
 	
 	var rl = readline.createInterface({input: process.stdin, output: process.stdout, completer: null});
 	
-	var name, authorName, authorURL, description, docsURL, version;
+	var name, authorName, authorURL, description, baseURL, version;
 	
 	rl.question("Project Name:  ", function(answer) {
 		name = answer;
@@ -14,10 +14,10 @@ exports.main = function(argv) {
 			description = answer;
 			rl.question("Author Name:  ", function(answer) {
 				authorName = answer;
-				rl.question("Author URL:  ", function(answer) {
+				rl.question("Author Website:  ", function(answer) {
 					authorURL = answer;
-					rl.question("Publish URL:  ", function(answer) {
-						docsURL = answer;
+					rl.question("API Base URL:  ", function(answer) {
+						baseURL = answer;
 						rl.question("Project Version:  ", function(answer) {
 							version = answer;
 							rl.close();
@@ -28,13 +28,14 @@ exports.main = function(argv) {
 									"description": description,
 									"author": {
 										"name": authorName,
-										"url": authorURL	
+										"website": authorURL
+											
 									},
 									"version": version,
-									"docs_url": docsURL
+									"base_url": docsURL
 								}
 							;
-							writeJSON(json)
+							writeJSONToFile(json)
 							
 						});
 					});
@@ -44,11 +45,15 @@ exports.main = function(argv) {
 	});
 };
 
-function writeJSON(json) {
+function writeJSONToFile(json) {
 
-	json = util.inspect(json, {showHidden: false, depth: null});
+	json = JSON.stringify(json, null, 3);
+	
+//	if (fs.existsSync("apidata.json")) {
+//		fs.unlinkSync("apidata.json");
+//	}
 
-	fs.writeFile("apidata.json", json, function(err) {
+	fs.writeFile("apidock.json", json, function(err) {
 		if (err) {
 			console.log(err);
 		}
