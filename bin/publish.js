@@ -7,11 +7,15 @@ exports.main = function(argv) {
 	
 	fs.stat("api_description.json", function(err, stat) {
 		if (err) {
-			console.log("No 'api_description.json' file exists. Run [apidocs makedocs] first.");
+			console.log("Error: No 'api_description.json' file exists. Run [apidocs makedocs] first.");
 			return;
 		}
 		var apiData = require(process.cwd() + "/api_description.json");
-		console.log(apiData);
+		
+		if (argv["verbose"]) {
+			console.log("Publish API data: " + apiData);
+		}
+		
 		// Make the http request to the server
 		var client = request.newClient('http://localhost:7070/');
         client.post("/upload", apiData, function(err, res, body) {
@@ -23,7 +27,7 @@ exports.main = function(argv) {
             }
             else {
                 // success
-                console.log("success uploading");
+                console.log("Success uploading docs. You an view them at www.restdock.com/api/" + apiData["apiDock_path"]);
             }    
         });
 	});

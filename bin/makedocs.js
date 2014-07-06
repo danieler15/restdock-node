@@ -6,7 +6,12 @@ var pathmod = require("path");
 var util = require("util");
 
 var markup = "//@";
+var validTags = new Array("identifier", "type", "description", "notes", "ignore");
 var apiData = {};
+
+
+var dev;
+var verbose;
 
 exports.main = function(argv) {
 	
@@ -15,6 +20,9 @@ exports.main = function(argv) {
 		console.log("No express-object specified. Assuming it is 'app'");
 		console.log("Specificy a value by adding flag --express-object=[value]");
 	}
+	
+	dev = argv["dev"];
+	verbose = argv["verbose"];
 	
 	if (argv['f']) {
 		handleJSFile(argv['f']);
@@ -27,10 +35,8 @@ exports.main = function(argv) {
 	}
 	
 	var fullData = insertJSONMetaData(apiData);
-//	console.log("\n\nfullData:");
-//	logArray(fullData);
-//	console.log("\n\n");
-//	console.log(fullData["api_endpoints"]);
+
+	console.log("Found " + Object.keys(apiData).length + " endpoints total.");
 	
 	writeFullJSONAPIData(fullData);
 };
@@ -40,7 +46,7 @@ exports.main = function(argv) {
 function walkDirectory(dir) {
 	var paths = fs.readdirSync(dir);
 	
-	console.log("Encountered directory with paths: " + paths);
+	vLog("Encountered directory with paths: " + paths);
 	
 	for (var i = 0; i < paths.length; i++) {
 		var shortPath = paths[i];
@@ -59,7 +65,7 @@ function walkDirectory(dir) {
 }
 
 function handleJSFile(path) {
-	console.log("Handling .js file:" + path);
+	vLog("Handling .js file: " + path);
 	var text = fs.readFileSync(path).toString();
 	
 	var currentEndpoint = "";
@@ -81,10 +87,9 @@ function handleJSFile(path) {
 			var apiPath = rem.substr(0, end);
 			
 			if (!isValidPath(apiPath)) {
-				console.log("invalid path: " + apiPath);
+				vLog("ignoring invalid path: " + apiPath);
 				continue;
 			}
-			console.log(apiPath);
 			
 			var rest = line.substr(end);
 			if (rem.indexOf("function")) {
@@ -102,9 +107,11 @@ function handleJSFile(path) {
 			var curLine = lines[curLineNum];
 			
 			if (hasMarkup(lines[curLineNum]) && lines[curLineNum].indexOf("//@ignore") > -1) {
-				console.log("ignoring path:  " + apiPath);
+				vLog("Ignoring path:  " + apiPath);
 				continue;
 			}
+			
+			console.log("Found API Path: " + apiPath);
 		
 			while (hasMarkup(curLine)) {
 				endpoint[markupKey(curLine)] = markupValue(curLine);
@@ -147,6 +154,7 @@ function handleJSFile(path) {
 			var smallestIndex = smallestInArray(indices);
 			if (indexSemi == indexComma && indexSemi == indexSpace) {
 				parameter["name"] = "ERROR**";
+				eLog("Unable to parse parameter", false);
 			}
 			else {
 				parameter["name"] = remaining.substr(0, smallestIndex)
@@ -174,7 +182,7 @@ function insertJSONMetaData(endpointData) {
 	
 	var metadata = require(pathmod.join(process.cwd(), "apidock.json"));
 	
-	logArray(metadata);
+	vLog("restdock metadata: " + arrayContents(metadata));
 	
 	var fullJSON = {
 		"apidocs_info": {
@@ -199,14 +207,14 @@ function insertJSONMetaData(endpointData) {
 function writeFullJSONAPIData(json) {
 
 	json = JSON.stringify(json, null, 3);
-	console.log("\n\nfull JSON data:  " + json);
+	vLog("\n\nFull JSON data:  " + json);
 	
 	fs.writeFile("api_description.json", json, function(err) {
 		if (err) {
-			console.log(err);
+			eLog("Error writing to file: " + err, true);
 		}
 		else {
-			console.log("File saved successfully.");
+			console.log("api_description.json saved successfully. Use [restdock publish] to publish.");
 		}
 	});
 }
@@ -230,7 +238,9 @@ function markupKey(str) {
 	var key = line.substring(0, indexOfFirstSpace);
 	var value = line.substr(indexOfFirstSpace+1);
 	
-	console.log("markupKey for string [" + str + "]  == " +key);
+	if (validTags.indexOf(key) < 0) {
+		wLog("Invalid tag in markup: @" + key);
+	}
 	
 	return key;
 }
@@ -243,9 +253,7 @@ function markupValue(str) {
 	var indexOfFirstSpace = line.indexOf(" ");
 	var key = line.substring(0, indexOfFirstSpace);
 	var value = line.substr(indexOfFirstSpace+1);
-	
-	console.log("markupValue for string [" + str + "]  == " +value);
-	
+		
 	return value;	
 }
 
@@ -265,7 +273,11 @@ function isValidPath(str) {
 }
 
 function logArray(arr) {
-	console.log(util.inspect(arr, {showHidden: false, depth: null}));
+	console.log(arrayContents(arr));
+}
+
+function arrayContents(arr) {
+	return util.inspect(arr, {showHidden: false, depth: null})
 }
 
 function isJSFile(filename) {
@@ -275,6 +287,35 @@ function isJSFile(filename) {
 	return ext === "js";
 }
 
+//warnLog
+function wLog(str) {
+	console.log("WARN: " + str);
+}
+
+//errorLog
+function eLog(str, exit) {
+	console.log("**ERROR: " + str);
+	if (exit) {
+		console.log("restdock execution stopped.");
+	}
+	else {
+		console.log("restdock execution continuing");
+	}
+}
+
+//devLog
+function dLog(str) {
+	if (dev) {
+		console.log(str);
+	}
+}
+
+//verboseLog
+function vLog(str) {
+	if (verbose) {
+		console.log(str);
+	}
+}
 
 
 
