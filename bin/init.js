@@ -32,7 +32,7 @@ exports.main = function(argv) {
 											
 									},
 									"version": version,
-									"base_url": docsURL
+									"base_url": baseURL
 								}
 							;
 							writeJSONToFile(json)

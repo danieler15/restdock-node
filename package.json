@@ -1,7 +1,7 @@
 {
- 	"name": "apidock",
+ 	"name": "restdock",
  	"version": "0.1.0",
- 	"description": "Automatic API documentation generation and hosting.",
+ 	"description": "Automatic documentation generation and hosting for REST APIs using Express.",
 	"keywords": [
 		"API",
 		"documentation",
@@ -19,11 +19,11 @@
   	"author": "Daniel Ernst",
   	"license": "MIT",
   	"bin": {
-    	"apidock": "bin/index.js"
+    	"restdock": "bin/index.js"
   	},
  	"dependencies": {
    		"minimist": "^0.1.0",
 		"request-json": "0.4.10"
 	},
-  	"preferGlobal": "ture"
+  	"preferGlobal": "true"
 }

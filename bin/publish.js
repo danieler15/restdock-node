@@ -10,7 +10,7 @@ exports.main = function(argv) {
 			console.log("No 'api_description.json' file exists. Run [apidocs makedocs] first.");
 			return;
 		}
-		var apiData = require("../api_description.json");
+		var apiData = require(process.cwd() + "/api_description.json");
 		console.log(apiData);
 		// Make the http request to the server
 		var client = request.newClient('http://localhost:7070/');

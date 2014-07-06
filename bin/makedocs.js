@@ -189,7 +189,8 @@ function insertJSONMetaData(endpointData) {
 		"api_author": metadata.author,
 		"api_text_description": metadata.description,
 		"api_version": metadata.version,
-		"api_base_url": metadata.docs_url,
+		"api_base_url": metadata.base_url,
+		"apiDock_path": stripSpaces(metadata.project).toLowerCase(),
 		"api_endpoints": endpointData
 	};
 	return fullJSON;
@@ -208,6 +209,10 @@ function writeFullJSONAPIData(json) {
 			console.log("File saved successfully.");
 		}
 	});
+}
+
+function stripSpaces(str) {
+	return str.replace(/\s+/g, '');
 }
 
 function hasMarkup(str) {
