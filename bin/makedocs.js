@@ -9,6 +9,9 @@ var markup = "//@";
 var validTags = new Array("identifier", "type", "description", "notes", "ignore");
 var apiData = {};
 
+var prefixString;
+
+//var prefixRegex;
 
 var dev;
 var verbose;
@@ -23,6 +26,9 @@ exports.main = function(argv) {
 	
 	dev = argv["dev"];
 	verbose = argv["verbose"];
+	
+	prefixString = argv["p"];
+	prefixRegex = argv["px"];
 	
 	if (argv['f']) {
 		handleJSFile(argv['f']);
@@ -111,6 +117,12 @@ function handleJSFile(path) {
 				continue;
 			}
 			
+			if (prefixString && apiPath.indexOf(prefixString) != 0 && apiPath.indexOf(prefixString) != 1) {
+				vLog("Ignoring path without prefix: " + apiPath)
+				continue;
+			}
+			
+
 			console.log("Found API Path: " + apiPath);
 		
 			while (hasMarkup(curLine)) {
@@ -185,8 +197,8 @@ function insertJSONMetaData(endpointData) {
 	vLog("restdock metadata: " + arrayContents(metadata));
 	
 	var fullJSON = {
-		"apidocs_info": {
-			"apidocs": {
+		"restdock_info": {
+			"restdock": {
 				"author": "Daniel Ernst",
 				"link": "github.com/danieler15/apiautodocs"
 			},
