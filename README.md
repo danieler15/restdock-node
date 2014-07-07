@@ -5,9 +5,6 @@ RestDock is a utility that provides automatic documentation generation and hosti
 
 ## Installation
 
-
-restdock-node is not yet available for download. Shortly, it will be available via npm.
-
 To download restdock for node, install via npm with:
 
     npm install restdock
