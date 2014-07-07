@@ -2,7 +2,7 @@
 
 exports.projectName = "RestDock";
 exports.cliName = "restdock";
-exports.serverRoot = "www.restdock.com";
+exports.serverRoot = "http://restdock.herokuapp.com";
 exports.devServerRoot = "http://localhost:7070";
 exports.validCommands = Array("init", "makedocs", "publish"); 
 

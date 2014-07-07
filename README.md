@@ -100,7 +100,7 @@ Upon success, you will be given a URL at which you can access automatically gene
 
 ## TODO
 
-There is a lot to be done with restdock. My first priority is to add support for Express 4 routers, so that restdock can identify endpoints that aren't declared explicitly with app.VERB, and generally make restdock work with different ways of declaring routes and parameters.
+There is a lot to be done with restdock. First, in the coming days I look to provide support for updating, removing, and previewing documentation. Also I want to add support for Express 4 routers, so that restdock can identify endpoints that aren't declared explicitly with app.VERB, and generally make restdock work with different ways of declaring routes and parameters.
 
 ## License
 

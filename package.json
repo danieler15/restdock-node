@@ -1,17 +1,17 @@
 {
  	"name": "restdock",
- 	"version": "0.1.0",
+ 	"version": "0.9.0",
  	"description": "Automatic documentation generation and hosting for REST APIs using Express.",
 	"keywords": [
 		"API",
 		"documentation",
 		"utility"
 	],
-	"homepage": "****",
-	"bugs": "github***",
+	"homepage": "http://restdock.herokuapp.com/",
+	"bugs": "https://github.com/danieler15/restdock-node/issues",
 	"respository": {
 		"type": "git",
-		"url": "github***"
+		"url": "http://github.com/danieler15/restdock-node.git"
 	},
 	"scripts": {
     	"test": "echo \"Error: no test specified\" && exit 1"
