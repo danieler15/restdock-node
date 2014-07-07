@@ -11,9 +11,8 @@ var makedocs = require("./makedocs.js");
 var publish = require("./publish.js");
 var init = require("./init.js");
 
-console.log("*****************\n");
-
 if (argv["verbose"] || argv["dev"]) {
+	console.log("*****************");
 	console.log("Argv: " + util.inspect(argv, {showHidden: false, depth: null}));
 }
 

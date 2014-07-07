@@ -18,11 +18,11 @@ var verbose;
 
 exports.main = function(argv) {
 	
-	var expressObject = argv['express-object'];
-	if (!expressObject) {
-		console.log("No express-object specified. Assuming it is 'app'");
-		console.log("Specificy a value by adding flag --express-object=[value]");
-	}
+//	var expressObject = argv['express-object'];
+//	if (!expressObject) {
+//		console.log("No express-object specified. Assuming it is 'app'");
+//		console.log("Specificy a value by adding flag --express-object=[value]");
+//	}
 	
 	dev = argv["dev"];
 	verbose = argv["verbose"];
@@ -41,6 +41,10 @@ exports.main = function(argv) {
 	}
 	
 	var fullData = insertJSONMetaData(apiData);
+	
+	if (!fullData) {
+		return;
+	}
 
 	console.log("Found " + Object.keys(apiData).length + " endpoints total.");
 	
@@ -192,7 +196,17 @@ function handleJSFile(path) {
 
 function insertJSONMetaData(endpointData) {
 	
-	var metadata = require(pathmod.join(process.cwd(), "apidock.json"));
+	var path = pathmod.join(process.cwd(), "restdock.json");
+	try {
+		fs.lstatSync(path);
+	}
+	catch (e) {
+		// files does not exist
+		eLog("restdock.json does not exist. Run [restdock init] first.", true);
+		return null;
+	}
+
+	var metadata = require(path);
 	
 	vLog("restdock metadata: " + arrayContents(metadata));
 	
@@ -308,7 +322,7 @@ function wLog(str) {
 function eLog(str, exit) {
 	console.log("**ERROR: " + str);
 	if (exit) {
-		console.log("restdock execution stopped.");
+		console.log("**restdock execution stopped.");
 	}
 	else {
 		console.log("restdock execution continuing");

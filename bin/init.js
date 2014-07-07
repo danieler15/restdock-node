@@ -53,12 +53,12 @@ function writeJSONToFile(json) {
 //		fs.unlinkSync("apidata.json");
 //	}
 
-	fs.writeFile("apidock.json", json, function(err) {
+	fs.writeFile("restdock.json", json, function(err) {
 		if (err) {
 			console.log(err);
 		}
 		else {
-			console.log("apidata.json successfully created.");
+			console.log("restdock.json successfully created.");
 		}
 	});
 }
