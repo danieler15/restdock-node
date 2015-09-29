@@ -1,7 +1,7 @@
 restdock-node
 ==============
 
-RestDock is a utility that provides automatic documentation generation and hosting for REST APIs. restdock-node is the command line utility provided to generate documentation and host it on the RestDock servers.
+RestDock is a utility that provides automatic documentation generation and hosting for REST APIs. restdock-node is the command line utility provided to generate documentation and host it on the RestDock servers. See a information about hosted APIs here: [http://restdock.herokuapp.com/](http://restdock.herokuapp.com/) 
 
 ## Installation
 
